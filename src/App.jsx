@@ -1,3 +1,4 @@
+import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
 import { Modal, Button, Card } from 'react-bootstrap';
 import './App.css';
 import { useEffect, useState } from 'react';
@@ -20,26 +21,24 @@ function App() {
 
   const handleEditClose = () => setEditShow(false);
   const handleEditShow = (data) => {
-    setEditContent(data.paragraph || '');  // Set content to be edited
+    setEditContent(data.paragraph || '');  
     setEditId(data.id);
     setEditShow(true);
   };
 
-  // Firestore collection reference
   const dbref = collection(db, 'DocApp');
 
-  // Function to store data in Firestore
   const handleAdd = async () => {
     const addData = await addDoc(dbref, { title: addDocument, paragraph: '' });
     if (addData) {
-      alert("Data added successfully");
-      window.location.reload();
+      // alert("Data added successfully");
+      fetch(); // Instead of reloading, fetch data again
+      handleClose(); // Close modal
     } else {
       alert("Error occurred!");
     }
   };
 
-  // Function to fetch data from Firestore
   const fetch = async () => {
     const fetchItem = await getDocs(dbref);
     const fetchDatas = fetchItem.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
@@ -51,34 +50,32 @@ function App() {
     fetch();
   }, []);
 
-  // Function to delete a document
   const delDoc = async (id) => {
     const delref = doc(dbref, id);
     try {
       await deleteDoc(delref);
-      alert("Deleted successfully!");
-      window.location.reload();
+      // alert("Deleted successfully!");
+      fetch(); // Fetch data again to update the UI
     } catch (err) {
       alert(err);
     }
   };
 
-  // Function to save edited data to Firestore
   const handleSave = async () => {
     if (!editId) return;
     const editRef = doc(dbref, editId);
     try {
       await updateDoc(editRef, { paragraph: editContent });
-      alert("Document updated successfully!");
+      // alert("Document updated successfully!");
       setEditShow(false);
-      window.location.reload();
+      fetch(); // Fetch data again to update the UI
     } catch (err) {
-      alert("Error updating document: ", err);
+      // alert("Error updating document: ", err);
     }
   };
 
   return (
-    <>
+    <Router>
       <div className="container text-center">
         <h1 className="fw-bolder text-primary mt-5">DOCUMENT APP</h1>
         <button onClick={handleShow} className="btn btn-outline-primary fw-bolder mt-3">
@@ -94,7 +91,7 @@ function App() {
                 <hr />
                 <Card.Text dangerouslySetInnerHTML={{ __html: data.paragraph }} />
                 <Button onClick={() => handleEditShow(data)} className="ms-2" variant="success">
-                  ADD <i className="fa-solid fa-plus"></i>
+                  EDIT <i className="fa-solid fa-edit"></i>
                 </Button>
                 <Button onClick={() => delDoc(data.id)} className="ms-4" variant="danger">
                   DELETE
@@ -149,7 +146,7 @@ function App() {
           </Button>
         </Modal.Footer>
       </Modal>
-    </>
+    </Router>
   );
 }
 
